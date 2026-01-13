@@ -105,7 +105,7 @@ app.get('/dashboard', auth, (req, res) => {
   const rows = lastLogs.map(l => `
 <tr>
   <td>${l.time}</td>
-  <td>${l.type}</td>
+  <td>${l.user.id}</td>
   <td>${l.user.name}</td>
   <td>${l.user.username || '-'}</td>
   <td>${l.link}</td>
