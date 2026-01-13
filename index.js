@@ -133,7 +133,7 @@ app.get('/dashboard', auth, (req, res) => {
     return `
 <tr>
   <td>${l.time}</td>
-  <td>${l.type}</td>
+  <td>${l.user.id}</td>
   <td>${l.user.name}</td>
   <td>${l.user.username || '-'}</td>
   <td>${l.link}</td>
@@ -163,7 +163,7 @@ a { text-decoration:none; font-weight:bold; }
 <table>
 <tr>
 <th>Time</th>
-<th>Type</th>
+<th>ID</th>
 <th>Name</th>
 <th>Username</th>
 <th>Link</th>
