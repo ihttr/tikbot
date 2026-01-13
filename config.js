@@ -1,0 +1,8 @@
+
+module.exports = {
+  BOT_TOKEN: process.env.BOT_TOKEN,
+  OWNER_CHANNEL_ID: '-1003159745587',
+  OWNER_ID: 1420746702,
+  RATE_LIMIT_SECONDS: 15,
+  MAX_WARNINGS: 3
+};
