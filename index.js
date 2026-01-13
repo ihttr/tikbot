@@ -61,10 +61,6 @@ function getUser(id) {
 /* ================== Helpers ================== */
 const cooldown = new Map();
 
-function isOwner(id) {
-  return id === OWNER_ID;
-}
-
 function notifyOwner(user, link, type) {
   const username = user.username ? `@${user.username}` : 'NoUsername';
 
@@ -98,18 +94,52 @@ function auth(req, res, next) {
   next();
 }
 
+/* ================== Ban / Unban Routes ================== */
+app.get('/ban', auth, (req, res) => {
+  const userId = req.query.user;
+  if (!userId || !data[userId]) {
+    return res.send('User not found');
+  }
+
+  data[userId].warnings = MAX_WARNINGS;
+  saveData();
+  res.redirect(`/dashboard?owner=${OWNER_ID}`);
+});
+
+app.get('/unban', auth, (req, res) => {
+  const userId = req.query.user;
+  if (!userId || !data[userId]) {
+    return res.send('User not found');
+  }
+
+  data[userId].warnings = 0;
+  saveData();
+  res.redirect(`/dashboard?owner=${OWNER_ID}`);
+});
+
 /* ================== Dashboard ================== */
 app.get('/dashboard', auth, (req, res) => {
   const lastLogs = logs.slice(-20).reverse();
 
-  const rows = lastLogs.map(l => `
+  const rows = lastLogs.map(l => {
+    const banned =
+      data[l.user.id] &&
+      data[l.user.id].warnings >= MAX_WARNINGS;
+
+    const actionButton = banned
+      ? `<a href="/unban?owner=${OWNER_ID}&user=${l.user.id}" style="color:lightgreen">Unban</a>`
+      : `<a href="/ban?owner=${OWNER_ID}&user=${l.user.id}" style="color:red">Ban</a>`;
+
+    return `
 <tr>
   <td>${l.time}</td>
-  <td>${l.user.id}</td>
+  <td>${l.type}</td>
   <td>${l.user.name}</td>
   <td>${l.user.username || '-'}</td>
   <td>${l.link}</td>
-</tr>`).join('');
+  <td>${actionButton}</td>
+</tr>`;
+  }).join('');
 
   res.send(`
 <!DOCTYPE html>
@@ -121,6 +151,7 @@ body { font-family: Arial; background:#111; color:#eee; padding:20px; }
 table { width:100%; border-collapse: collapse; margin-top:15px; }
 th, td { border:1px solid #333; padding:6px; font-size:12px; }
 th { background:#222; }
+a { text-decoration:none; font-weight:bold; }
 </style>
 </head>
 <body>
@@ -136,6 +167,7 @@ th { background:#222; }
 <th>Name</th>
 <th>Username</th>
 <th>Link</th>
+<th>Action</th>
 </tr>
 ${rows}
 </table>
