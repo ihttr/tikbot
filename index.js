@@ -17,7 +17,7 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 app.get('/', (_, res) => res.send('Bot running'));
-app.listen(PORT, () => console.log('Web running on', PORT));
+app.listen(PORT, () => console.log('Web server running on', PORT));
 
 /* ================== Telegram Bot ================== */
 const bot = new TelegramBot(BOT_TOKEN, { polling: true });
@@ -44,8 +44,7 @@ function getUser(id) {
     data[id] = {
       downloads: 0,
       warnings: 0,
-      mode: 'video',
-      banUntil: null
+      mode: 'video'
     };
   }
   return data[id];
@@ -56,6 +55,7 @@ const cooldown = new Map();
 
 function notifyOwner(user, link, type) {
   const username = user.username ? `@${user.username}` : 'NoUsername';
+
   bot.sendMessage(
     OWNER_CHANNEL_ID,
 `✅ New Download (${type})
@@ -80,7 +80,7 @@ function addLog({ user, link, type, status, error = null }) {
   saveLogs();
 }
 
-/* ================== Dashboard Auth ================== */
+/* ================== Auth ================== */
 function auth(req, res, next) {
   if (req.query.owner != OWNER_ID) {
     return res.status(403).send('Forbidden');
@@ -88,30 +88,21 @@ function auth(req, res, next) {
   next();
 }
 
-/* ================== Ban / Unban / TempBan ================== */
+/* ================== Ban / Unban ================== */
 app.get('/ban', auth, (req, res) => {
-  const id = req.query.user;
-  if (!data[id]) return res.send('User not found');
-  data[id].warnings = MAX_WARNINGS;
-  data[id].banUntil = null;
+  const userId = req.query.user;
+  if (!data[userId]) return res.send('User not found');
+
+  data[userId].warnings = MAX_WARNINGS;
   saveData();
   res.redirect(`/dashboard?owner=${OWNER_ID}`);
 });
 
 app.get('/unban', auth, (req, res) => {
-  const id = req.query.user;
-  if (!data[id]) return res.send('User not found');
-  data[id].warnings = 0;
-  data[id].banUntil = null;
-  saveData();
-  res.redirect(`/dashboard?owner=${OWNER_ID}`);
-});
+  const userId = req.query.user;
+  if (!data[userId]) return res.send('User not found');
 
-app.get('/tempban', auth, (req, res) => {
-  const { user, hours } = req.query;
-  if (!data[user]) return res.send('User not found');
-
-  data[user].banUntil = Date.now() + (Number(hours) * 60 * 60 * 1000);
+  data[userId].warnings = 0;
   saveData();
   res.redirect(`/dashboard?owner=${OWNER_ID}`);
 });
@@ -119,24 +110,13 @@ app.get('/tempban', auth, (req, res) => {
 /* ================== Retry ================== */
 app.get('/retry', auth, async (req, res) => {
   const link = req.query.link;
+  if (!link) return res.redirect(`/dashboard?owner=${OWNER_ID}`);
+
   try {
-    if (link) {
-      await axios.get(`https://tikwm.com/api/?url=${encodeURIComponent(link)}`);
-    }
+    await axios.get(`https://tikwm.com/api/?url=${encodeURIComponent(link)}`);
   } catch {}
+
   res.redirect(`/dashboard?owner=${OWNER_ID}`);
-});
-
-/* ================== Logs Download ================== */
-app.get('/download-logs', auth, (req, res) => {
-  res.download(LOG_FILE);
-});
-
-/* ================== Charts API ================== */
-app.get('/api/chart', auth, (req, res) => {
-  const success = logs.filter(l => l.status === 'success').length;
-  const failed = logs.filter(l => l.status === 'failed').length;
-  res.json({ success, failed });
 });
 
 /* ================== Dashboard ================== */
@@ -148,32 +128,30 @@ app.get('/dashboard', auth, (req, res) => {
   if (filter === 'failed') filteredLogs = logs.filter(l => l.status === 'failed');
 
   const lastLogs = filteredLogs.slice(-20).reverse();
+
   const successCount = logs.filter(l => l.status === 'success').length;
   const failedCount = logs.filter(l => l.status === 'failed').length;
 
   const rows = lastLogs.map(l => {
-    const u = data[l.user.id];
-    const banned = u?.warnings >= MAX_WARNINGS;
-    const tempBanned = u?.banUntil && Date.now() < u.banUntil;
+    const banned = data[l.user.id]?.warnings >= MAX_WARNINGS;
 
     const banBtn = banned
       ? `<a href="/unban?owner=${OWNER_ID}&user=${l.user.id}" style="color:lightgreen">Unban</a>`
       : `<a href="/ban?owner=${OWNER_ID}&user=${l.user.id}" style="color:red">Ban</a>`;
 
-    const tempBtn = `<a href="/tempban?owner=${OWNER_ID}&user=${l.user.id}&hours=24" style="color:orange">24h</a>`;
     const retryBtn = l.status === 'failed'
-      ? ` | <a href="/retry?owner=${OWNER_ID}&link=${encodeURIComponent(l.link)}" style="color:cyan">Retry</a>`
+      ? ` | <a href="/retry?owner=${OWNER_ID}&link=${encodeURIComponent(l.link)}" style="color:orange">Retry</a>`
       : '';
 
     return `
 <tr>
 <td>${l.time}</td>
-<td>${l.user.id}</td>
+<td>${l.type}</td>
 <td>${l.user.name}</td>
 <td>${l.user.username || '-'}</td>
 <td style="color:${l.status === 'failed' ? 'red' : 'lightgreen'}">${l.status}</td>
 <td>${l.error || '-'}</td>
-<td>${tempBanned ? '⏱' : ''} ${banBtn} | ${tempBtn}${retryBtn}</td>
+<td>${banBtn}${retryBtn}</td>
 </tr>`;
   }).join('');
 
@@ -185,7 +163,7 @@ app.get('/dashboard', auth, (req, res) => {
 <style>
 body { font-family: Arial; background:#111; color:#eee; padding:20px; }
 table { width:100%; border-collapse: collapse; margin-top:10px; }
-th,td { border:1px solid #333; padding:6px; font-size:12px; }
+th, td { border:1px solid #333; padding:6px; font-size:12px; }
 th { background:#222; }
 a { text-decoration:none; font-weight:bold; }
 </style>
@@ -200,17 +178,9 @@ a { text-decoration:none; font-weight:bold; }
 <a href="/dashboard?owner=${OWNER_ID}&filter=failed" style="color:red">Failed</a>
 </p>
 
-<p>
-👥 Users: ${Object.keys(data).filter(k => !isNaN(k)).length} |
-⬇️ Downloads: ${logs.length} |
-✅ ${successCount} / ❌ ${failedCount}
-</p>
-
-<p>
-<a href="/download-logs?owner=${OWNER_ID}" style="color:cyan">⬇ Download Logs</a>
-</p>
-
-<canvas id="chart" height="80"></canvas>
+<p>👥 Users: ${Object.keys(data).filter(k => !isNaN(k)).length}</p>
+<p>⬇️ Downloads: ${logs.length}</p>
+<p>✅ Success: ${successCount} | ❌ Failed: ${failedCount}</p>
 
 <table>
 <tr>
@@ -224,21 +194,6 @@ a { text-decoration:none; font-weight:bold; }
 </tr>
 ${rows}
 </table>
-
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script>
-fetch('/api/chart?owner=${OWNER_ID}')
-.then(r=>r.json())
-.then(d=>{
-  new Chart(document.getElementById('chart'), {
-    type:'doughnut',
-    data:{
-      labels:['Success','Failed'],
-      datasets:[{data:[d.success,d.failed]}]
-    }
-  });
-});
-</script>
 
 </body>
 </html>
@@ -266,12 +221,10 @@ bot.onText(/\/audio/, msg => {
 bot.on('message', async msg => {
   const chatId = msg.chat.id;
   const text = msg.text;
+
   if (!text || !text.includes('tiktok.com')) return;
 
   const u = getUser(chatId);
-
-  if (u.banUntil && Date.now() < u.banUntil)
-    return bot.sendMessage(chatId, '⏱ You are temporarily banned');
 
   if (u.warnings >= MAX_WARNINGS)
     return bot.sendMessage(chatId, LANG.en.banned);
@@ -295,12 +248,12 @@ bot.on('message', async msg => {
     await bot.deleteMessage(chatId, loading.message_id);
 
     if (u.mode === 'audio') {
-      await bot.sendAudio(chatId, info.music);
+      await bot.sendAudio(chatId, info.music, { title: 'TikTok MP3' });
       notifyOwner(msg.from, text, 'MP3');
       addLog({ user: msg.from, link: text, type: 'MP3', status: 'success' });
       u.mode = 'video';
     } else {
-      await bot.sendVideo(chatId, info.play);
+      await bot.sendVideo(chatId, info.play, { caption: LANG.en.success });
       notifyOwner(msg.from, text, 'HQ');
       addLog({ user: msg.from, link: text, type: 'HQ', status: 'success' });
     }
@@ -309,13 +262,19 @@ bot.on('message', async msg => {
     saveData();
 
   } catch (err) {
+    const reason =
+      err.response?.data?.msg ||
+      err.message ||
+      'Unknown error';
+
     addLog({
       user: msg.from,
       link: text,
       type: u.mode === 'audio' ? 'MP3' : 'HQ',
       status: 'failed',
-      error: err.message || 'Unknown error'
+      error: reason
     });
+
     bot.sendMessage(chatId, LANG.en.fail);
   }
 });
