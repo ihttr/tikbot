@@ -200,13 +200,13 @@ app.get('/api/logs', auth, (req, res) => {
 /* ================== Bot Commands ================== */
 bot.onText(/\/start/, (msg) => {
   bot.sendMessage(msg.chat.id, LANG.en.start);
-  notifyOwner(msg.from, text1, 'start user');
+  
 });
 
-// bot.onText(/\/stats/, (msg) => {
-//   const u = getUser(msg.chat.id);
-//   bot.sendMessage(msg.chat.id, LANG.en.stats(u.downloads, u.warnings));
-// });
+bot.onText(/\/stats/, (msg) => {
+  const u = getUser(msg.chat.id);
+  bot.sendMessage(msg.chat.id, LANG.en.stats(u.downloads, u.warnings));
+});
 
 bot.onText(/\/audio/, (msg) => {
   const u = getUser(msg.chat.id);
@@ -219,7 +219,7 @@ bot.onText(/\/audio/, (msg) => {
 bot.on('message', async (msg) => {
   const chatId = msg.chat.id;
   const text = msg.text;
-
+  notifyOwner(msg.from, text1, 'start user');
   if (!text || !text.includes('tiktok.com')) return;
 
   const u = getUser(chatId);
