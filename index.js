@@ -194,7 +194,7 @@ app.get('/api/logs', auth, (req, res) => {
 /* ================== Bot Commands ================== */
 bot.onText(/\/start/, (msg) => {
   bot.sendMessage(msg.chat.id, LANG.en.start);
-      notifyOwner(msg.from, text, 'newuser');
+      
 });
 
 bot.onText(/\/stats/, (msg) => {
