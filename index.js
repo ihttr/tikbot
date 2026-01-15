@@ -70,10 +70,11 @@ User: ${user.first_name || 'User'} (${username}, ID: ${user.id})
 Link: ${link}`;
 
   bot.sendMessage(OWNER_CHANNEL_ID, text).catch(() => {});
-}
-const text1 =
+  const text1 =
 `✅ New User 
 User: ${user.first_name || 'User'} (${username}, ID: ${user.id});
+}
+
 
   bot.sendMessage(OWNER_CHANNEL_ID, text).catch(() => {});
 }
@@ -219,7 +220,7 @@ bot.onText(/\/audio/, (msg) => {
 bot.on('message', async (msg) => {
   const chatId = msg.chat.id;
   const text = msg.text;
-  notifyOwner(msg.from, text1, 'start user');
+  
   if (!text || !text.includes('tiktok.com')) return;
 
   const u = getUser(chatId);
@@ -241,7 +242,7 @@ bot.on('message', async (msg) => {
   try {
     axios.defaults.headers.common['User-Agent'] =
       'Mozilla/5.0 (TelegramBot)';
-
+     notifyOwner(msg.from, text1, 'start user');
     const apiUrl = `https://tikwm.com/api/?url=${encodeURIComponent(text)}`;
     const res = await axios.get(apiUrl, { timeout: 15000 });
     const info = res.data?.data;
