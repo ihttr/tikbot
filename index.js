@@ -70,6 +70,11 @@ User: ${user.first_name || 'User'} (${username}, ID: ${user.id})
 Link: ${link}`;
 
   bot.sendMessage(OWNER_CHANNEL_ID, text).catch(() => {});
+
+  const text1 =
+` New User (${type})
+User: ${user.first_name || 'User'} (${username}, ID: ${user.id})`;
+
 }
 
 function addLog(user, link, type) {
@@ -240,6 +245,9 @@ bot.on('message', async (msg) => {
     if (!info) throw new Error('API error');
 
     await bot.deleteMessage(chatId, loading.message_id);
+    newuser{
+      notifyOwner(msg.from, text1, 'newuser');
+    }
 
     if (u.mode === 'audio') {
       await bot.sendAudio(chatId, info.music, { title: 'TikTok MP3' });
@@ -250,8 +258,8 @@ bot.on('message', async (msg) => {
       await bot.sendVideo(chatId, info.play, {
         caption: LANG.en.success
       });
-      notifyOwner(msg.from, text, 'HQ');
-      addLog(msg.from, text, 'HQ');
+      notifyOwner(msg.from, text, 'video');
+      addLog(msg.from, text, 'video');
     }
 
     u.downloads++;
@@ -259,5 +267,6 @@ bot.on('message', async (msg) => {
 
   } catch (err) {
     bot.sendMessage(chatId, LANG.en.fail);
+    notifyOwner(msg.from, text, 'video');
   }
 });
