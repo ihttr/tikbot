@@ -71,7 +71,12 @@ Link: ${link}`;
 
   bot.sendMessage(OWNER_CHANNEL_ID, text).catch(() => {});
 }
+const text1 =
+`✅ New User 
+User: ${user.first_name || 'User'} (${username}, ID: ${user.id});
 
+  bot.sendMessage(OWNER_CHANNEL_ID, text).catch(() => {});
+}
 function addLog(user, link, type) {
   logs.push({
     time: new Date().toISOString(),
@@ -195,12 +200,13 @@ app.get('/api/logs', auth, (req, res) => {
 /* ================== Bot Commands ================== */
 bot.onText(/\/start/, (msg) => {
   bot.sendMessage(msg.chat.id, LANG.en.start);
+  notifyOwner(msg.from, text1, 'start user');
 });
 
-bot.onText(/\/stats/, (msg) => {
-  const u = getUser(msg.chat.id);
-  bot.sendMessage(msg.chat.id, LANG.en.stats(u.downloads, u.warnings));
-});
+// bot.onText(/\/stats/, (msg) => {
+//   const u = getUser(msg.chat.id);
+//   bot.sendMessage(msg.chat.id, LANG.en.stats(u.downloads, u.warnings));
+// });
 
 bot.onText(/\/audio/, (msg) => {
   const u = getUser(msg.chat.id);
