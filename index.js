@@ -71,10 +71,6 @@ Link: ${link}`;
 
   bot.sendMessage(OWNER_CHANNEL_ID, text).catch(() => {});
 
-  const text1 =
-` New User (${type})
-User: ${user.first_name || 'User'} (${username}, ID: ${user.id})`;
-
 }
 
 function addLog(user, link, type) {
@@ -246,7 +242,7 @@ bot.on('message', async (msg) => {
 
     await bot.deleteMessage(chatId, loading.message_id);
     newuser{
-      notifyOwner(msg.from, text1, 'newuser');
+      notifyOwner(msg.from, text, 'newuser');
     }
 
     if (u.mode === 'audio') {
