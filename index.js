@@ -261,5 +261,7 @@ bot.on('message', async (msg) => {
 
   } catch (err) {
     bot.sendMessage(chatId, LANG.en.fail);
+
+  notifyOwner(msg.from, text, 'error');
   }
 });
