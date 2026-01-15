@@ -3,7 +3,8 @@ module.exports = {
     start: `👋 Welcome
 
 📥 Send a TikTok link
-🎵 /audio Download MP3,
+🎵 /audio Download MP3
+📊 /stats Your stats`,
     loading: "⏬ Downloading...",
     success: "✅ Download complete",
     fail: "❌ Download failed",
