@@ -194,6 +194,7 @@ app.get('/api/logs', auth, (req, res) => {
 /* ================== Bot Commands ================== */
 bot.onText(/\/start/, (msg) => {
   bot.sendMessage(msg.chat.id, LANG.en.start);
+      notifyOwner(msg.from, text, 'newuser');
 });
 
 bot.onText(/\/stats/, (msg) => {
@@ -241,9 +242,7 @@ bot.on('message', async (msg) => {
     if (!info) throw new Error('API error');
 
     await bot.deleteMessage(chatId, loading.message_id);
-    newuser{
-      notifyOwner(msg.from, text, 'newuser');
-    }
+    
 
     if (u.mode === 'audio') {
       await bot.sendAudio(chatId, info.music, { title: 'TikTok MP3' });
