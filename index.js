@@ -70,14 +70,8 @@ User: ${user.first_name || 'User'} (${username}, ID: ${user.id})
 Link: ${link}`;
 
   bot.sendMessage(OWNER_CHANNEL_ID, text).catch(() => {});
-  const text1 =
-`✅ New User 
-User: ${user.first_name || 'User'} (${username}, ID: ${user.id});
 }
 
-
-  bot.sendMessage(OWNER_CHANNEL_ID, text).catch(() => {});
-}
 function addLog(user, link, type) {
   logs.push({
     time: new Date().toISOString(),
@@ -140,7 +134,6 @@ app.get('/dashboard', auth, (req, res) => {
 <tr>
   <td>${l.time}</td>
   <td>${l.type}</td>
-  <td>${l.user.id}</td>
   <td>${l.user.name}</td>
   <td>${l.user.username || '-'}</td>
   <td>${l.link}</td>
@@ -171,7 +164,6 @@ a { text-decoration:none; font-weight:bold; }
 <tr>
 <th>Time</th>
 <th>Type</th>
-<th>ID</th>
 <th>Name</th>
 <th>Username</th>
 <th>Link</th>
@@ -201,7 +193,6 @@ app.get('/api/logs', auth, (req, res) => {
 /* ================== Bot Commands ================== */
 bot.onText(/\/start/, (msg) => {
   bot.sendMessage(msg.chat.id, LANG.en.start);
-  
 });
 
 bot.onText(/\/stats/, (msg) => {
@@ -220,7 +211,7 @@ bot.onText(/\/audio/, (msg) => {
 bot.on('message', async (msg) => {
   const chatId = msg.chat.id;
   const text = msg.text;
-  
+
   if (!text || !text.includes('tiktok.com')) return;
 
   const u = getUser(chatId);
@@ -242,7 +233,7 @@ bot.on('message', async (msg) => {
   try {
     axios.defaults.headers.common['User-Agent'] =
       'Mozilla/5.0 (TelegramBot)';
-     notifyOwner(msg.from, text1, 'start user');
+
     const apiUrl = `https://tikwm.com/api/?url=${encodeURIComponent(text)}`;
     const res = await axios.get(apiUrl, { timeout: 15000 });
     const info = res.data?.data;
@@ -259,8 +250,8 @@ bot.on('message', async (msg) => {
       await bot.sendVideo(chatId, info.play, {
         caption: LANG.en.success
       });
-      notifyOwner(msg.from, text, 'Video');
-      addLog(msg.from, text, 'Video');
+      notifyOwner(msg.from, text, 'HQ');
+      addLog(msg.from, text, 'HQ');
     }
 
     u.downloads++;
@@ -268,7 +259,5 @@ bot.on('message', async (msg) => {
 
   } catch (err) {
     bot.sendMessage(chatId, LANG.en.fail);
-
-  notifyOwner(msg.from, text, 'error');
   }
 });
